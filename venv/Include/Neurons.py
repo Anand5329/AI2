@@ -5,6 +5,9 @@ class Neuron:
         self.weights = weights
         self.next_layer_size = next_layer_size
 
+    def __str__(self):
+        return str(self.value) + '\n' + str(self.bias) + '\n' + str(self.next_layer_size)
+
 class InputNeuron(Neuron):
     def __init__(self):
         super().init(self)

@@ -12,20 +12,20 @@ class NeuralNetwork:
 
     def create(self):
         for i in range(self.inp):
-            self.input_neurons.append(InputNeuron())
+            self.input_neurons.append(Neurons.InputNeuron())
             self.input_neurons[i].next_layer_size = self.hidden[0]
 
         for i in range(self.hidden):
             for j in range(self.hidden[i]):
 
-                self.hidden_neurons[i].append(HiddenNeuron())
+                self.hidden_neurons[i].append(Neurons.HiddenNeuron())
                 if i+1 < len(hidden):
                     self.hidden_neurons[i][j].next_layer_size = self.hidden[i+1]
                 else:
                     self.hidden_neurons[i][j].next_layer_size = self.output
 
         for i in range(self.ouptut):
-            self.output_neurons.append(OutputNeuron())
+            self.output_neurons.append(Neurons.OutputNeuron())
             self.output_neurons[i].next_layer_size = 0
         return
 
