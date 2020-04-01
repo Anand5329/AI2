@@ -1,3 +1,4 @@
+import random
 class Neuron:
     def __init__(self, bias=0, value=0, weights = [], previous_layer_size = 0):
         self.bias = bias
@@ -9,15 +10,15 @@ class Neuron:
         return str(self.value) + '\n' + str(self.bias) + '\n' + str(self.previous_layer_size)
 
     def randomize_weights(self):
-        if(self.previous_layer_size > 0):
+        if self.previous_layer_size > 0:
             for i in range(self.previous_layer_size):
-                self.weights.append(random())
+                self.weights.append(random.random())
             return True
         else:
             return False
 
     def randomize_bias(self):
-        bias = random()
+        self.bias = random.random()
         return
 
 class InputNeuron(Neuron):
