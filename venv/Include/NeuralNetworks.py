@@ -1,5 +1,6 @@
 import Neurons
 import Layer
+import numpy as np
 
 class NeuralNetwork:
     def __init__(self, inp = 1, hidden = [1], output = 1, input_layer = Layer(), hidden_layers = [Layer()], output_layer = Layer()):
@@ -39,12 +40,33 @@ class NeuralNetwork:
 
         return
 
-    def calculate_values(self):#forward propogation
+    def forward_propagation(self):#forward propagation (calculating values)
+        #for hidden layers:
         for i in range(self.hidden):
-            for j in range(self.hidden[i]):
-                layer
-                if i == 0:
-                    layer = self.input_layer
-                else:
-                    layer = self.hidden_layers[i-1]
+            layer
+            if i == 0:
+                layer = self.input_layer
+            else:
+                layer = self.hidden_layers[i-1]
+            biases = layer.biases
+            values = layer.values
+            weights = get_weights(self.hidden_layers[i])
+            np_weights = np.array(weights)
+            np_values = np.array(values)
+            np_x = np.dot(np_values,np_weights)#values for the current layer
+            self.hidden_layers[i].values = list(np_x)
+        #for output layer:
+        layer = self.hidden_layers[len(hidden)-1]
+        np_weights = np.array(get_weights(self.output_layer))
+        np_values = np.array(layer.values)
+        np_x = np.dot(np_values,np_weights)
+        self.output_layer.values = list(np_x)
+        return
 
+
+
+    def get_weights(self, layer):
+        weights = []
+        for i in range(len(layer.values)):
+            weights.append(layer.neurons[i].weights)
+        return weights
