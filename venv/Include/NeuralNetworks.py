@@ -1,22 +1,22 @@
 import Neurons
-import Layer
+import Layer as L
 import numpy as np
 
 class NeuralNetwork:
-    def __init__(self, input_layer, hidden_layers, output_layer, inp = 1, hidden = [1], output = 1):#input_layer & output_layer are a Layer. hidden_layers is a list of Layer()
+    def __init__(self, inp = 1, hidden = [1], output = 1):  #input_layer & output_layer are a Layer. hidden_layers is a list of Layer()
         self.input = inp
         self.hidden = hidden
         self.output = output
-        self.input_layer = input_layer
-        self.hidden_layers = hidden_layers
-        self.output_layer = output_layer
-        self.create(self)
-
+        self.input_layer = L.Layer(0, inp)
+        self.hidden_layers = []
+        self.hidden_layers.append(L.Layer(inp, hidden[0]))
+        for i in range(1, len(hidden)):
+            self.hidden_layers.append(L.Layer(i-1, i))
+        self.output_layer = L.Layer(hidden[len(hidden)-1], output)
+        #self.create()
+    """
     def create(self):
-        neurons = []
-        for i in range(self.inp):
-            neurons.append(Neurons.InputNeuron())
-        self.input_layer = Layer(neurons)
+       self.input_layer
 
         for i in range(self.hidden):
             neurons = []
@@ -28,7 +28,7 @@ class NeuralNetwork:
                     neurons[j].previous_layer_size = self.hidden[i-1]
                 neurons[j].randomize_weights()
                 neurons[j].randomize_bias()
-            self.hidden_layers.append(Layer(neurons))
+            self.hidden_layers.append(L.Layer(neurons))
 
         neurons = []
         for i in range(self.ouptut):
@@ -36,37 +36,37 @@ class NeuralNetwork:
             self.output_neurons[i].previous_layer_size = self.hidden[len(hidden)-1]
             self.output_neurons[i].randomize_weights()
             self.output_neurons[i].randomize_bias()
-        self.output_layer = Layer(neurons)
+        self.output_layer = L.Layer(neurons)
 
         return
+        """
 
-    def forward_propagation(self):#forward propagation (calculating values)
-        #for hidden layers:
-        for i in range(self.hidden):
-            layer
+    def forward_propagation(self):  # forward propagation (calculating values)
+        # for hidden layers:
+        for i in range(len(self.hidden)):
             if i == 0:
                 layer = self.input_layer
             else:
                 layer = self.hidden_layers[i-1]
             biases = layer.biases
             values = layer.values
-            weights = get_weights(self.hidden_layers[i])
+            weights = NeuralNetwork.get_weights(self.hidden_layers[i])
             np_weights = np.array(weights)
             np_values = np.array(values)
-            np_x = np.dot(np_values,np_weights)#values for the current layer
+            np_x = np.dot(np_values,np_weights)  # values for the current layer
             self.hidden_layers[i].values = list(np_x)
-        #for output layer:
+
+        # for output layer:
         layer = self.hidden_layers[len(hidden)-1]
-        np_weights = np.array(get_weights(self.output_layer))
+        np_weights = np.array(NeuralNetwork.get_weights(self.output_layer))
         np_values = np.array(layer.values)
-        np_x = np.dot(np_values,np_weights)
+        np_x = np.dot(np_values, np_weights)
         self.output_layer.values = list(np_x)
         return
 
-
-
-    def get_weights(self, layer):
+    @staticmethod
+    def get_weights(layer):
         weights = []
-        for i in range(len(layer.values)):
+        for i in range(len(layer.neurons)):
             weights.append(layer.neurons[i].weights)
         return weights
