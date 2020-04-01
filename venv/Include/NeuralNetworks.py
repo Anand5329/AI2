@@ -3,7 +3,7 @@ import Layer
 import numpy as np
 
 class NeuralNetwork:
-    def __init__(self, inp = 1, hidden = [1], output = 1, input_layer = Layer(), hidden_layers = [Layer()], output_layer = Layer()):
+    def __init__(self, input_layer, hidden_layers, output_layer, inp = 1, hidden = [1], output = 1):#input_layer & output_layer are a Layer. hidden_layers is a list of Layer()
         self.input = inp
         self.hidden = hidden
         self.output = output
