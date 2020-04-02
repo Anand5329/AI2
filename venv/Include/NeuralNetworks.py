@@ -1,6 +1,7 @@
 import Neurons
 import Layer as L
 import numpy as np
+import math
 
 class NeuralNetwork:
 
@@ -23,20 +24,11 @@ class NeuralNetwork:
                 layer = self.input_layer
             else:
                 layer = self.hidden_layers[i-1]
-            biases = layer.biases
-            values = layer.values
-            weights = NeuralNetwork.get_weights(self.hidden_layers[i])
-            np_weights = np.array(weights).transpose()
-            np_values = np.array(values)
-            np_x = np.dot(np_values, np_weights)  # values for the current layer
-            self.hidden_layers[i].values = list(np_x)
+            self.hidden_layers[i].values = NeuralNetwork.step_forward(layer, self.hidden_layers[i])
 
         # for output layer:
         layer = self.hidden_layers[len(self.hidden)-1]
-        np_weights = np.array(NeuralNetwork.get_weights(self.output_layer)).transpose()
-        np_values = np.array(layer.values)
-        np_x = np.dot(np_values, np_weights)
-        self.output_layer.values = list(np_x)
+        self.output_layer.values = NeuralNetwork.step_forward(layer, self.output_layer)
         return
 
     @staticmethod
@@ -45,3 +37,21 @@ class NeuralNetwork:
         for i in range(len(layer.neurons)):
             weights.append(layer.neurons[i].weights)
         return weights
+
+    @staticmethod
+    def activation_sigmoid(x):
+        return 1/(1+math.e**(-x))
+
+    @staticmethod
+    def step_forward(previous_layer, current_layer):
+        biases = current_layer.biases
+        values = previous_layer.values
+        weights = NeuralNetwork.get_weights(current_layer)
+        np_weights = np.array(weights).transpose()
+        np_values = np.array(values)
+        np_x = np.dot(np_values, np_weights)
+
+        for i in range(len(np_x)):
+            np_x[i] = np_x[i] + biases[i]
+            np_x[i] = NeuralNetwork.activation_sigmoid(np_x[i])
+        return list(np_x)
