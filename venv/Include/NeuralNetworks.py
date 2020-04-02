@@ -11,7 +11,7 @@ class NeuralNetwork:
         self.hidden_layers = []
         self.hidden_layers.append(L.Layer(inp, hidden[0]))
         for i in range(1, len(hidden)):
-            self.hidden_layers.append(L.Layer(i-1, i))
+            self.hidden_layers.append(L.Layer(hidden[i-1], hidden[i]))
         self.output_layer = L.Layer(hidden[len(hidden)-1], output)
         #self.create()
     """
@@ -57,7 +57,7 @@ class NeuralNetwork:
             self.hidden_layers[i].values = list(np_x)
 
         # for output layer:
-        layer = self.hidden_layers[len(hidden)-1]
+        layer = self.hidden_layers[len(self.hidden)-1]
         np_weights = np.array(NeuralNetwork.get_weights(self.output_layer)).transpose()
         np_values = np.array(layer.values)
         np_x = np.dot(np_values, np_weights)
