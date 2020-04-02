@@ -1,9 +1,9 @@
 import random
 class Neuron:
-    def __init__(self, bias=0, value=0, weights = [], previous_layer_size = 0):
+    def __init__(self, bias=0, value=0, previous_layer_size = 0):
         self.bias = bias
         self.value = value
-        self.weights = weights
+        self.weights = []
         self.previous_layer_size = previous_layer_size
 
     def __str__(self):
@@ -22,13 +22,13 @@ class Neuron:
         return
 
 class InputNeuron(Neuron):
-    def __init__(self, bias=0, value=0, weights = [], previous_layer_size = 0):
-        super().__init__(bias,value,weights,previous_layer_size)
+    def __init__(self, bias=0, value=0, previous_layer_size = 0):
+        super().__init__(bias, value, previous_layer_size)
 
 class OutputNeuron(Neuron):
-    def __init__(self, bias=0, value=0, weights = [], previous_layer_size = 0):
-        super().__init__(bias,value,weights,previous_layer_size)
+    def __init__(self, bias=0, value=0, previous_layer_size = 0):
+        super().__init__(bias, value, previous_layer_size)
 
 class HiddenNeuron(Neuron):
-    def __init__(self, bias=0, value=0, weights = [], previous_layer_size = 0):
-        super().__init__(bias,value,weights,previous_layer_size)
+    def __init__(self, bias=0, value=0, previous_layer_size = 0):
+        super().__init__(bias, value, previous_layer_size)
