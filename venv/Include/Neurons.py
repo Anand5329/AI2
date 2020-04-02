@@ -12,13 +12,13 @@ class Neuron:
     def randomize_weights(self):
         if self.previous_layer_size > 0:
             for i in range(self.previous_layer_size):
-                self.weights.append(random.random())
+                self.weights.append(random.uniform(-1,1))
             return True
         else:
             return False
 
     def randomize_bias(self):
-        self.bias = random.random()
+        self.bias = random.uniform(-1,1)
         return
 
 class InputNeuron(Neuron):
