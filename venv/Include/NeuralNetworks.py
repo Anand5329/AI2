@@ -3,43 +3,18 @@ import Layer as L
 import numpy as np
 
 class NeuralNetwork:
-    def __init__(self, inp = 1, hidden = [1], output = 1):  #input_layer & output_layer are a Layer. hidden_layers is a list of Layer()
+
+    def __init__(self, inp = 1, hidden = [1], output = 1, inputs = []):
         self.input = inp
         self.hidden = hidden
         self.output = output
-        self.input_layer = L.Layer(0, inp)
+        self.input_layer = L.Layer(0, inp, values = inputs)
         self.hidden_layers = []
         self.hidden_layers.append(L.Layer(inp, hidden[0]))
         for i in range(1, len(hidden)):
             self.hidden_layers.append(L.Layer(hidden[i-1], hidden[i]))
         self.output_layer = L.Layer(hidden[len(hidden)-1], output)
-        #self.create()
-    """
-    def create(self):
-       self.input_layer
 
-        for i in range(self.hidden):
-            neurons = []
-            for j in range(self.hidden[i]):
-                neurons.append(Neurons.HiddenNeuron())
-                if i == 0:
-                    neurons[j].previous_layer_size = self.input
-                else:
-                    neurons[j].previous_layer_size = self.hidden[i-1]
-                neurons[j].randomize_weights()
-                neurons[j].randomize_bias()
-            self.hidden_layers.append(L.Layer(neurons))
-
-        neurons = []
-        for i in range(self.ouptut):
-            self.output_neurons.append(Neurons.OutputNeuron())
-            self.output_neurons[i].previous_layer_size = self.hidden[len(hidden)-1]
-            self.output_neurons[i].randomize_weights()
-            self.output_neurons[i].randomize_bias()
-        self.output_layer = L.Layer(neurons)
-
-        return
-        """
 
     def forward_propagation(self):  # forward propagation (calculating values)
         # for hidden layers:
