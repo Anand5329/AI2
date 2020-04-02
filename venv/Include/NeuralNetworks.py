@@ -51,14 +51,14 @@ class NeuralNetwork:
             biases = layer.biases
             values = layer.values
             weights = NeuralNetwork.get_weights(self.hidden_layers[i])
-            np_weights = np.array(weights)
+            np_weights = np.array(weights).transpose()
             np_values = np.array(values)
-            np_x = np.dot(np_values,np_weights)  # values for the current layer
+            np_x = np.dot(np_values, np_weights)  # values for the current layer
             self.hidden_layers[i].values = list(np_x)
 
         # for output layer:
         layer = self.hidden_layers[len(hidden)-1]
-        np_weights = np.array(NeuralNetwork.get_weights(self.output_layer))
+        np_weights = np.array(NeuralNetwork.get_weights(self.output_layer)).transpose()
         np_values = np.array(layer.values)
         np_x = np.dot(np_values, np_weights)
         self.output_layer.values = list(np_x)
