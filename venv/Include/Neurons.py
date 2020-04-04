@@ -1,5 +1,6 @@
 import random
 class Neuron:
+
     def __init__(self, bias=0, value=0, previous_layer_size = 0):
         self.bias = bias
         self.value = value
