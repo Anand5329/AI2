@@ -25,10 +25,12 @@ class NeuralNetwork:
             else:
                 layer = self.hidden_layers[i-1]
             self.hidden_layers[i].values = NeuralNetwork.step_forward(layer, self.hidden_layers[i])
+            self.hidden_layers[i].update_values()
 
         # for output layer:
         layer = self.hidden_layers[len(self.hidden)-1]
         self.output_layer.values = NeuralNetwork.step_forward(layer, self.output_layer)
+        self.output_layer.update_values()
         return
 
     @staticmethod
