@@ -1,5 +1,5 @@
-import Neurons
-import Layer as L
+import src.NeuralArchitecture.Neurons
+import src.NeuralArchitecture.Layer as L
 import numpy as np
 import math
 
@@ -97,7 +97,7 @@ class NeuralNetwork:
         for i in range(len(self.hidden_layers)):
             if i == len(self.hidden_layers - 1):
                 next_layer = self.output_layer
-            else
+            else:
                 next_layer = self.hidden_layers[i+1]
 
             self.hidden_layers[i].error = NeuralNetwork.calculate_layer_error(next_layer, self.hidden_layers[i]) # calculating other layers' errors
