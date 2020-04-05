@@ -25,15 +25,15 @@ class NeuralNetwork:
             else:
                 layer = self.hidden_layers[i - 1]
             self.hidden_layers[i].z = NeuralNetwork.feed_forward(layer, self.hidden_layers[i])
-            for z in self.hidden_layers[i].z:
-                self.hidden_layers[i].values = NeuralNetwork.activation_sigmoid(z)
+            for j in range(len(self.hidden_layers[i].z)):
+                self.hidden_layers[i].values[j] = NeuralNetwork.activation_sigmoid(self.hidden_layers[i].z[j])
             self.hidden_layers[i].update_values()
 
         # for output layer:
         layer = self.hidden_layers[len(self.hidden) - 1]
         self.output_layer.z = NeuralNetwork.feed_forward(layer, self.output_layer)
-        for z in self.output_layer.z:
-            self.output_layer.values = NeuralNetwork.activation_sigmoid(z)
+        for i in range(len(self.output_layer.z)):
+            self.output_layer.values[i] = NeuralNetwork.activation_sigmoid(self.output_layer.z[i])
         self.output_layer.update_values()
         return
 
@@ -69,8 +69,8 @@ class NeuralNetwork:
 
     def calculate_last_layer_error_mse(self, needed_output):
         error = []
-        for y, z in needed_output, self.output_layer.z:
-            d = (NeuralNetwork.activation_sigmoid(z) - y) * NeuralNetwork.sigmoid_derivative(z)
+        for i in range(len(needed_output)):
+            d = (NeuralNetwork.activation_sigmoid(self.output_layer.z[i]) - needed_output[i]) * NeuralNetwork.sigmoid_derivative(self.output_layer.z[i])
             error.append(d)
         return error
 
@@ -80,22 +80,24 @@ class NeuralNetwork:
         np_weights = np.array(next_layer.weights)
         np_error = np.array(next_layer.error)
         np_w_dot_e = np.dot(np_weights.transpose(), np_error)
-        for z, y in current_layer.z, np_w_dot_e:
+        y_list = list(np_w_dot_e)
+        z_list = current_layer.z
+        for z, y in zip(z_list, y_list):
             error.append(NeuralNetwork.sigmoid_derivative(z) * y)
         return error
 
     @staticmethod
     def mean_squared_error(needed_output, existing_output):
         sum = 0
-        for x, y in zip(needed_output.values, existing_output):
+        for x, y in zip(needed_output, existing_output.values):
             sum = sum + (x - y) ** 2
-        return sum / needed_output.size
+        return sum / existing_output.size
 
     def back_propagation(self, needed_output):
 
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
-        for i in range(len(self.hidden_layers)):
-            if i == len(self.hidden_layers - 1):
+        for i in range(len(self.hidden_layers)-1,-1,-1):
+            if i == len(self.hidden_layers) - 1:
                 next_layer = self.output_layer
             else:
                 next_layer = self.hidden_layers[i + 1]
@@ -140,3 +142,7 @@ class NeuralNetwork:
             k = self.hidden_layers[n_layer - 1]
             prev_k = self.hidden_layers[n_layer - 2]
         return k.error[j] * prev_k.values[i]
+
+    def print_cost(self, needed_output):
+        print(NeuralNetwork.mean_squared_error(needed_output, self.output_layer))
+        return
