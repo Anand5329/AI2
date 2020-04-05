@@ -8,6 +8,9 @@ class Layer:
         self.biases = []
         self.values = []
         self.neurons = []
+        self.z = []
+        self.weights = []
+        self.error = []
         if len(values) != size and len(values) != 0:
             print("Input size mismatch")
         for i in range(self.size):
@@ -26,4 +29,14 @@ class Layer:
     def update_values(self):
         for n, v in zip(self.neurons, self.values):
             n.value = v
+        return
+
+    def update_weights(self):
+        for w, n in zip(self.weights, self.neurons):
+            n.weights = w
+        return
+
+    def update_biases(self):
+        for b, n in zip(self.biases, self.neurons):
+            n.bias = b
         return
