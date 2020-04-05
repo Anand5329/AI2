@@ -57,3 +57,8 @@ class NeuralNetwork:
             np_x[i] = np_x[i] + biases[i]
             np_x[i] = NeuralNetwork.activation_sigmoid(np_x[i])
         return list(np_x)
+
+    @staticmethod
+    def sigmoid_derivative(x):
+        y = NeuralNetwork.activation_sigmoid(x)
+        return (1-y)*y
