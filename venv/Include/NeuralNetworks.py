@@ -24,12 +24,16 @@ class NeuralNetwork:
                 layer = self.input_layer
             else:
                 layer = self.hidden_layers[i-1]
-            self.hidden_layers[i].values = NeuralNetwork.feed_forward(layer, self.hidden_layers[i])
+            self.hidden_layers[i].z = NeuralNetwork.feed_forward(layer, self.hidden_layers[i])
+            for z in self.hidden_layers[i].z:
+                self.hidden_layers[i].values = NeuralNetwork.activation_sigmoid(z)
             self.hidden_layers[i].update_values()
 
         # for output layer:
         layer = self.hidden_layers[len(self.hidden)-1]
-        self.output_layer.values = NeuralNetwork.feed_forward(layer, self.output_layer)
+        self.output_layer.z = NeuralNetwork.feed_forward(layer, self.output_layer)
+        for z in self.output_layer.z:
+            self.output_layer.values = NeuralNetwork.activation_sigmoid(z)
         self.output_layer.update_values()
         return
 
@@ -49,16 +53,88 @@ class NeuralNetwork:
         biases = current_layer.biases
         values = previous_layer.values
         weights = NeuralNetwork.get_weights(current_layer)
+        current_layer.weights = weights
         np_weights = np.array(weights).transpose()
         np_values = np.array(values)
         np_x = np.dot(np_values, np_weights)
 
         for i in range(len(np_x)):
             np_x[i] = np_x[i] + biases[i]
-            np_x[i] = NeuralNetwork.activation_sigmoid(np_x[i])
         return list(np_x)
 
     @staticmethod
     def sigmoid_derivative(x):
         y = NeuralNetwork.activation_sigmoid(x)
         return (1-y)*y
+
+    def calculate_last_layer_error_mse(self, needed_output):
+        error = []
+        for y, z in needed_output, self.output_layer.z:
+            d = (NeuralNetwork.activation_sigmoid(z) - y)*NeuralNetwork.sigmoid_derivative(z)
+            error.append(d)
+        return error
+
+    @staticmethod
+    def calculate_layer_error(next_layer, current_layer):
+        error = []
+        np_weights = np.array(next_layer.weights)
+        np_error = np.array(next_layer.error)
+        np_w_dot_e = np.dot(np_weights.transpose(),np_error)
+        for z, y in current_layer.z, np_w_dot_e:
+            error.append(NeuralNetwork.sigmoid_derivative(z)*y)
+        return error
+
+    @staticmethod
+    def mean_squared_error(needed_output, existing_output):
+        sum = 0
+        for x, y in zip(needed_output.values, existing_output):
+            sum = sum + (x - y) ** 2
+        return sum / needed_output.size
+
+    def back_propagation(self, needed_output):
+
+        self.output_layer.error = self.calculate_last_layer_error_mse(needed_output) # calculating last layer errors
+        for i in range(len(self.hidden_layers)):
+            if i == len(self.hidden_layers - 1):
+                next_layer = self.output_layer
+            else
+                next_layer = self.hidden_layers[i+1]
+
+            self.hidden_layers[i].error = NeuralNetwork.calculate_layer_error(next_layer, self.hidden_layers[i]) # calculating other layers' errors
+
+        L = len(self.hidden_layers) + 2
+
+        for l in range(1, L-1): # not last layer, that's why L-1
+            for j in range(self.hidden[l-1]):
+                if l == 1:
+                    size = self.input
+                else:
+                    size = self.hidden[l-2]
+                for i in range(size):
+                    self.hidden_layers[l-1].weights[j][i] = self.hidden_layers[l-1].weights[j][i] - self.partial_derivative_weight(l, j, i)
+                self.hidden_layers[l-1].biases[j] = self.hidden_layers[l-1].biases[j] - self.hidden_layers[l-1].error[j]
+            self.hidden_layers[l-1].update_weights()
+            self.hidden_layers[l-1].update_biases()
+
+        for j in range(self.output): # last layer
+            for i in range(self.hidden[L-3]):
+                self.output_layer.weights[j][i] = self.output_layer.weights[j][i] - self.partial_derivative_weight(L, j, i)
+            self.output_layer.biases[j] = self.output_layer.biases[j] - self.output_layer.error[j]
+        self.output_layer.update_weights()
+        self.output_layer.update_biases()
+
+        return
+
+
+
+    def partial_derivative_weight(self, n_layer, j, i):
+        if n_layer == len(self.hidden_layers) + 2:
+            k = self.output_layer
+            prev_k = self.hidden_layers[n_layer - 3]
+        elif n_layer == 1:
+            k = self.hidden_layers[n_layer - 1]
+            prev_k = self.input_layer
+        else:
+            k = self.hidden_layers[n_layer - 1]
+            prev_k = self.hidden_layers[n_layer - 2]
+        return k.error[j] * prev_k.values[i]
