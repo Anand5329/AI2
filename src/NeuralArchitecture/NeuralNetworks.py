@@ -13,6 +13,7 @@ class NeuralNetwork:
         self.input_layer = L.Layer(0, inp, values=inputs)
         self.hidden_layers = []
         self.hidden_layers.append(L.Layer(inp, hidden[0]))
+        self.training_data = []
         for i in range(1, len(hidden)):
             self.hidden_layers.append(L.Layer(hidden[i - 1], hidden[i]))
         self.output_layer = L.Layer(hidden[len(hidden) - 1], output)
@@ -146,3 +147,10 @@ class NeuralNetwork:
     def print_cost(self, needed_output):
         print(NeuralNetwork.mean_squared_error(needed_output, self.output_layer))
         return
+
+    def input_training_data(self, training_data):
+        self.training_data = training_data
+
+    def stochastic_GD(self, batch_size):
+        for i in range(0,len(self.training_data),batch_size):
+            batch = self.training_data[i:i+batch_size]
