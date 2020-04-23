@@ -93,11 +93,11 @@ class NeuralNetwork:
         return error
 
     @staticmethod
-    def mean_squared_error(needed_output, existing_output):
+    def mean_squared_error(needed_output, existing_output_layer):
         sum = 0
-        for x, y in zip(needed_output, existing_output.values):
+        for x, y in zip(needed_output, existing_output_layer.values):
             sum = sum + (x - y) ** 2
-        return sum / existing_output.size
+        return sum / existing_output_layer.size
 
     def calculate_errors(self, needed_output):
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
@@ -148,8 +148,9 @@ class NeuralNetwork:
             prev_k = self.hidden_layers[n_layer - 2]
         return k.error[j] * prev_k.values[i]
 
-    def print_cost(self, needed_output):
-        print(NeuralNetwork.mean_squared_error(needed_output, self.output_layer))
+    def print_cost(self, inputs, needed_output):
+        self.forward_propagation(inputs)
+        print(self.mean_squared_error(needed_output, self.output_layer))
         return
 
     def input_training_data(self, training_data):
