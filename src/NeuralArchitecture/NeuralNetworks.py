@@ -6,11 +6,11 @@ import math
 
 class NeuralNetwork:
 
-    def __init__(self, inp=1, hidden=[1], output=1, inputs=[]):
+    def __init__(self, inp=1, hidden=[1], output=1):
         self.input = inp
         self.hidden = hidden
         self.output = output
-        self.input_layer = L.Layer(0, inp, values=inputs)
+        self.input_layer = L.Layer(0, inp, values=[])
         self.hidden_layers = []
         self.hidden_layers.append(L.Layer(inp, hidden[0]))
         self.training_data = []
@@ -18,8 +18,13 @@ class NeuralNetwork:
             self.hidden_layers.append(L.Layer(hidden[i - 1], hidden[i]))
         self.output_layer = L.Layer(hidden[len(hidden) - 1], output)
 
-    def forward_propagation(self):  # forward propagation (calculating values)
+    def update_input(self, inputs):
+        self.input_layer.values = inputs
+        return
+
+    def forward_propagation(self, inputs):  # forward propagation (calculating values)
         # for hidden layers:
+        self.update_input(inputs)
         for i in range(len(self.hidden)):
             if i == 0:
                 layer = self.input_layer
@@ -94,10 +99,9 @@ class NeuralNetwork:
             sum = sum + (x - y) ** 2
         return sum / existing_output.size
 
-    def back_propagation(self, needed_output):
-
+    def calculate_errors(self, needed_output):
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
-        for i in range(len(self.hidden_layers)-1,-1,-1):
+        for i in range(len(self.hidden_layers) - 1, -1, -1):
             if i == len(self.hidden_layers) - 1:
                 next_layer = self.output_layer
             else:
@@ -105,8 +109,12 @@ class NeuralNetwork:
 
             self.hidden_layers[i].error = NeuralNetwork.calculate_layer_error(next_layer, self.hidden_layers[
                 i])  # calculating other layers' errors
+        return
 
+    def calculate_gradient(self):
         L = len(self.hidden_layers) + 2
+        w_gradient = np.empty(shape=(L,self.hidden[1],self.input), dtype='float')
+        b_gradient = np.empty(shape=(L,self.hidden[1]), dtype='float')
 
         for l in range(1, L - 1):  # not last layer, that's why L-1
             for j in range(self.hidden[l - 1]):
@@ -115,22 +123,18 @@ class NeuralNetwork:
                 else:
                     size = self.hidden[l - 2]
                 for i in range(size):
-                    self.hidden_layers[l - 1].weights[j][i] = self.hidden_layers[l - 1].weights[j][
-                                                                  i] - self.partial_derivative_weight(l, j, i)
-                self.hidden_layers[l - 1].biases[j] = self.hidden_layers[l - 1].biases[j] - \
-                                                      self.hidden_layers[l - 1].error[j]
-            self.hidden_layers[l - 1].update_weights()
-            self.hidden_layers[l - 1].update_biases()
+                    w_gradient[l-1][j][i] = self.partial_derivative_weight(l, j, i)
+                    b_gradient[l-1][j] = self.hidden_layers[l - 1].error[j]
 
         for j in range(self.output):  # last layer
             for i in range(self.hidden[L - 3]):
-                self.output_layer.weights[j][i] = self.output_layer.weights[j][i] - self.partial_derivative_weight(L, j,
-                                                                                                                   i)
-            self.output_layer.biases[j] = self.output_layer.biases[j] - self.output_layer.error[j]
-        self.output_layer.update_weights()
-        self.output_layer.update_biases()
+                w_gradient[L-1][j][i] = self.partial_derivative_weight(L, j, i)
+            b_gradient[L-1][j] = self.output_layer.error[j]
+        return w_gradient, b_gradient
 
-        return
+    def back_propagation(self, needed_output):
+        self.calculate_errors(needed_output)
+        return self.calculate_gradient()
 
     def partial_derivative_weight(self, n_layer, j, i):
         if n_layer == len(self.hidden_layers) + 2:
@@ -151,6 +155,43 @@ class NeuralNetwork:
     def input_training_data(self, training_data):
         self.training_data = training_data
 
+    def gradient_descent(self, w_gradient, b_gradient):
+        L = len(self.hidden_layers) + 2
+        for l in range(1, L - 1):  # not last layer, that's why L-1
+            for j in range(self.hidden[l - 1]):
+                if l == 1:
+                    size = self.input
+                else:
+                    size = self.hidden[l - 2]
+                for i in range(size):
+                    self.hidden_layers[l-1].weights[j][i] = self.hidden_layers[l-1].weights[j][i] - w_gradient[l-1][j][i]
+                self.hidden_layers[l-1].biases[j] = self.hidden_layers[l-1].biases[j] - b_gradient[l-1][j]
+            self.hidden_layers[l-1].update_biases()
+            self.hidden_layers[l-1].update_weights()
+
+        for j in range(self.output):  # last layer
+            for i in range(self.hidden[L - 3]):
+                self.output_layer.weights[j][i] = self.output_layer.weights[j][i] - w_gradient[L-1][j][i]
+            self.output_layer.biases[j] = self.output_layer.biases[j] - b_gradient[L-1][j]
+        self.output_layer.update_weights()
+        self.output_layer.update_biases()
+        return
+
     def stochastic_GD(self, batch_size):
+        L = len(self.hidden_layers) + 2
+        w_gradient = np.empty(shape=(L, self.hidden[1], self.input), dtype='float')
+        b_gradient = np.empty(shape=(L, self.hidden[1]), dtype='float')
         for i in range(0,len(self.training_data),batch_size):
             batch = self.training_data[i:i+batch_size]
+            for x, y in zip(batch[0], batch[1]):
+                self.forward_propagation(x)
+                w_g, b_g = self.back_propagation(y)
+                for id, x in np.ndenumerate(w_g):
+                    w_gradient[id] = w_gradient[id] + x
+                for id, x in np.ndenumerate(b_g):
+                    b_gradient[id] = b_gradient[id] + x
+            for id, w in np.ndenumerate(w_gradient):
+                w_gradient[id] = w/batch_size
+            for id, b in np.ndenumerate(b_gradient):
+                b_gradient[id] = b/batch_size
+            self.gradient_descent(w_gradient, b_gradient)
