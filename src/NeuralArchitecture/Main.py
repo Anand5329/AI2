@@ -3,20 +3,10 @@ import src.NeuralArchitecture.Neurons as N
 import src.NeuralArchitecture.Layer as L
 import numpy as np
 import random
+from tensorflow.keras.datasets import mnist
 
-inputs = [[]]
-for j in range(0,100):
-    inputs.append([])
-    for i in range(784):
-        inputs[j].append(random.uniform(0, 1))
+(X_train, Y_train), (X_test, Y_test) = mnist.load_data()
+X = X_train.reshape(X_train.shape[0],-1).T
+Y = Y_train.reshape(Y_train.shape[0],1).T
 ann = NN.NeuralNetwork(inp = 784, hidden = [16, 16], output = 10)
-needed_output = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
-outputs = []
-for j in range(0,100):
-    outputs.append(needed_output)
-training_data = [inputs]
-training_data.append(outputs)
-ann.input_training_data(training_data)
-ann.stochastic_GD(10)
-print(ann.output_layer.values)
-pass
+costs = ann.train(X, Y)
