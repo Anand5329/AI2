@@ -10,6 +10,7 @@ class NeuralNetwork:
         self.input = inp
         self.hidden = hidden
         self.output = output
+        self.L = len(hidden)+2
         self.input_layer = L.Layer(0, inp, values=[])
         self.hidden_layers = []
         self.hidden_layers.append(L.Layer(inp, hidden[0]))
@@ -32,15 +33,29 @@ class NeuralNetwork:
                 layer = self.hidden_layers[i - 1]
             self.hidden_layers[i].z = NeuralNetwork.feed_forward(layer, self.hidden_layers[i])
             for j in range(len(self.hidden_layers[i].z)):
-                self.hidden_layers[i].values[j] = NeuralNetwork.activation_sigmoid(self.hidden_layers[i].z[j])
+                self.hidden_layers[i].values[j] = NeuralNetwork.sigmoid(self.hidden_layers[i].z[j])
             self.hidden_layers[i].update_values()
 
         # for output layer:
         layer = self.hidden_layers[len(self.hidden) - 1]
         self.output_layer.z = NeuralNetwork.feed_forward(layer, self.output_layer)
         for i in range(len(self.output_layer.z)):
-            self.output_layer.values[i] = NeuralNetwork.activation_sigmoid(self.output_layer.z[i])
+            self.output_layer.values[i] = NeuralNetwork.sigmoid(self.output_layer.z[i])
         self.output_layer.update_values()
+        return
+
+    def forward_prop_vec(self, inputs):
+        self.update_input(inputs)
+        A = inputs
+        Z_cache = []
+        for i in range(1, self.L-1):
+            W = self.hidden_layers[i-1].weights
+            b = self.hidden_layers[i-1].biases
+            self.hidden_layers[i-1].z = np.dot(W,A) + b
+            A = NeuralNetwork.sigmoid(self.hidden_layers[i-1].z)
+            self.hidden_layers[i-1].values = A
+        self.output_layer.z = np.dot(self.output_layer.weights,A) + self.output_layer.biases
+        self.output_layer.values = NeuralNetwork.sigmoid(self.output_layer.z)
         return
 
     @staticmethod
@@ -51,8 +66,8 @@ class NeuralNetwork:
         return weights
 
     @staticmethod
-    def activation_sigmoid(x):
-        return 1 / (1 + math.e ** (-x))
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
 
     @staticmethod
     def feed_forward(previous_layer, current_layer):
@@ -70,13 +85,13 @@ class NeuralNetwork:
 
     @staticmethod
     def sigmoid_derivative(x):
-        y = NeuralNetwork.activation_sigmoid(x)
-        return (1 - y) * y
+        y = NeuralNetwork.sigmoid(x)
+        return np.multiply(1-y,y)
 
     def calculate_last_layer_error_mse(self, needed_output):
         error = []
         for i in range(len(needed_output)):
-            d = (NeuralNetwork.activation_sigmoid(self.output_layer.z[i]) - needed_output[i]) * NeuralNetwork.sigmoid_derivative(self.output_layer.z[i])
+            d = (NeuralNetwork.sigmoid(self.output_layer.z[i]) - needed_output[i]) * NeuralNetwork.sigmoid_derivative(self.output_layer.z[i])
             error.append(d)
         return error
 
@@ -98,6 +113,10 @@ class NeuralNetwork:
         for x, y in zip(needed_output, existing_output_layer.values):
             sum = sum + (x - y) ** 2
         return sum / existing_output_layer.size
+
+    @staticmethod
+    def cross_entropy_cost(AL, Y):
+        return -(np.dot(Y,np.log(AL).T)+np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]
 
     def calculate_errors(self, needed_output):
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
@@ -148,6 +167,32 @@ class NeuralNetwork:
             prev_k = self.hidden_layers[n_layer - 2]
         return k.error[j] * prev_k.values[i]
 
+    def back_step(self, dA, layer, prev_layer, m):
+        dZ = np.multiply(dA, NeuralNetwork.sigmoid_derivative(layer.z))
+        layer.grad["W"] = np.dot(dZ, prev_layer.values.T) / m
+        layer.grad["b"] = np.sum(dZ, axis=1, keepdims=True) / m
+        return np.dot(layer.weights.T, dZ)
+
+    def backward_prop_vec(self, Y, learning_rate):
+        m = Y.shape[1]
+        dAL = -np.divide(Y, self.output_layer.values) - np.divide(1 - Y, 1 - self.output_layer.values)
+        dA = self.back_step(dAL, self.output_layer, self.hidden_layers[self.L - 2-1], m)
+        for l in reversed(range(1, self.L - 2)):
+            dA = self.back_step(dA, self.hidden_layers[l], self.hidden_layers[l - 1], m)
+        dA = self.back_step(dA, self.hidden_layers[0], self.input_layer, m)
+        self.update(learning_rate)
+        return
+
+    def update(self, learning_rate):
+        for l in range(self.L - 2):
+            self.hidden_layers[l].weights = self.hidden_layers[l].weights - learning_rate * self.hidden_layers[l].grad[
+                "W"]
+            self.hidden_layers[l].biases = self.hidden_layers[l].biases - learning_rate * self.hidden_layers[l].grad[
+                "b"]
+        self.output_layer.weights = self.output_layer.weights - learning_rate * self.output_layer.grad["W"]
+        self.output_layer.biases = self.output_layer.biases - learning_rate * self.output_layer.grad["b"]
+        return
+
     def print_cost(self, inputs, needed_output):
         self.forward_propagation(inputs)
         print(self.mean_squared_error(needed_output, self.output_layer))
@@ -177,6 +222,14 @@ class NeuralNetwork:
         self.output_layer.update_weights()
         self.output_layer.update_biases()
         return
+
+    def train(self, X, Y, epochs = 2000, learning_rate = 1.2):
+        costs = []
+        for i in range(epochs):
+            self.forward_prop_vec(X)
+            costs.append(NeuralNetwork.cross_entropy_cost(self.output_layer.values, Y))
+            self.backward_prop_vec(Y, learning_rate)
+        return costs
 
     def stochastic_GD(self, batch_size):
         L = len(self.hidden_layers) + 2
