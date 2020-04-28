@@ -116,7 +116,7 @@ class NeuralNetwork:
 
     @staticmethod
     def cross_entropy_cost(AL, Y):
-        return -(np.dot(Y,np.log(AL).T)+np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]
+        return -(np.sum((np.dot(Y,np.log(AL).T)+np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]))
 
     def calculate_errors(self, needed_output):
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
@@ -167,15 +167,18 @@ class NeuralNetwork:
             prev_k = self.hidden_layers[n_layer - 2]
         return k.error[j] * prev_k.values[i]
 
+    def sigmoid_derivative(self, layer):
+        return np.multiply(1-layer.values, layer.values)
+
     def back_step(self, dA, layer, prev_layer, m):
-        dZ = np.multiply(dA, NeuralNetwork.sigmoid_derivative(layer.z))
+        dZ = np.multiply(dA, self.sigmoid_derivative(layer))
         layer.grad["W"] = np.dot(dZ, prev_layer.values.T) / m
         layer.grad["b"] = np.sum(dZ, axis=1, keepdims=True) / m
         return np.dot(layer.weights.T, dZ)
 
     def backward_prop_vec(self, Y, learning_rate):
         m = Y.shape[1]
-        dAL = -np.divide(Y, self.output_layer.values) - np.divide(1 - Y, 1 - self.output_layer.values)
+        dAL = -np.divide(Y, self.output_layer.values) + np.divide(1 - Y, 1 - self.output_layer.values)
         dA = self.back_step(dAL, self.output_layer, self.hidden_layers[self.L - 2-1], m)
         for l in reversed(range(1, self.L - 2)):
             dA = self.back_step(dA, self.hidden_layers[l], self.hidden_layers[l - 1], m)
@@ -192,6 +195,19 @@ class NeuralNetwork:
         self.output_layer.weights = self.output_layer.weights - learning_rate * self.output_layer.grad["W"]
         self.output_layer.biases = self.output_layer.biases - learning_rate * self.output_layer.grad["b"]
         return
+
+    def predict(self, X):
+        self.forward_prop_vec(X)
+        prediction = np.zeros((self.output,X.shape[1]))
+        for i in range(X.shape[1]):
+            y = self.output_layer.values[:,i].reshape(self.output, 1)
+            max = np.max(y)
+            for j in range(y.size):
+                if y[j] == max:
+                    prediction[j][i] = 1
+                else:
+                    prediction[j][i] = 0
+        return prediction
 
     def print_cost(self, inputs, needed_output):
         self.forward_propagation(inputs)
@@ -227,7 +243,9 @@ class NeuralNetwork:
         costs = []
         for i in range(epochs):
             self.forward_prop_vec(X)
-            costs.append(NeuralNetwork.cross_entropy_cost(self.output_layer.values, Y))
+            cost = NeuralNetwork.cross_entropy_cost(self.output_layer.values, Y)
+            print("Cost after epoch {0}: {1}".format(i+1,cost))
+            costs.append(cost)
             self.backward_prop_vec(Y, learning_rate)
         return costs
 
