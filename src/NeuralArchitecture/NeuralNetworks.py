@@ -2,7 +2,7 @@ import src.NeuralArchitecture.Neurons
 import src.NeuralArchitecture.Layer as L
 import numpy as np
 import math
-
+import sklearn.utils as sku
 
 class NeuralNetwork:
 
@@ -67,6 +67,7 @@ class NeuralNetwork:
 
     @staticmethod
     def sigmoid(x):
+        x = x.astype('float64')
         return 1 / (1 + np.exp(-x))
 
     @staticmethod
@@ -116,7 +117,7 @@ class NeuralNetwork:
 
     @staticmethod
     def cross_entropy_cost(AL, Y):
-        return -(np.sum((np.dot(Y,np.log(AL).T)+np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]))
+        return (np.sum((- np.dot(Y,np.log(AL).T) - np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]))
 
     def calculate_errors(self, needed_output):
         self.output_layer.error = self.calculate_last_layer_error_mse(needed_output)  # calculating last layer errors
@@ -209,6 +210,20 @@ class NeuralNetwork:
                     prediction[j][i] = 0
         return prediction
 
+    def measure_accuracy(self, X_test, Y_test):
+        Y_predict = self.predict(X_test)
+
+        ctr = 0
+        for i in range(Y_test.shape[1]):
+            check = Y_test[:, i] == Y_predict[:,i]
+            # print(check.all)
+            if check.all():
+                ctr += 1
+            else:
+                pass
+        # print("Accuracy: " + str(ctr / Y_T.shape[1]))
+        return ctr/Y_test.shape[1]
+
     def print_cost(self, inputs, needed_output):
         self.forward_propagation(inputs)
         print(self.mean_squared_error(needed_output, self.output_layer))
@@ -239,15 +254,21 @@ class NeuralNetwork:
         self.output_layer.update_biases()
         return
 
-    def train(self, X, Y, epochs = 2000, learning_rate = 1.2):
+    def train(self, X, Y, epochs = 2000, learning_rate = 1.2, measure_accuracy = False, X_test = [], Y_test = []):
         costs = []
+        accuracies = []
         for i in range(epochs):
+            X,Y = sku.shuffle(X.T,Y.T)
+            X = X.T
+            Y = Y.T
             self.forward_prop_vec(X)
             cost = NeuralNetwork.cross_entropy_cost(self.output_layer.values, Y)
             print("Cost after epoch {0}: {1}".format(i+1,cost))
             costs.append(cost)
             self.backward_prop_vec(Y, learning_rate)
-        return costs
+            if(measure_accuracy):
+                accuracies.append(self.measure_accuracy(X_test,Y_test))
+        return costs,accuracies
 
     def stochastic_GD(self, batch_size):
         L = len(self.hidden_layers) + 2
