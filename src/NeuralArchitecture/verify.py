@@ -412,7 +412,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     Returns:
     parameters -- parameters learnt by the model. They can then be used to predict.
     """
-
+    tic = time.time()
     # np.random.seed(1)
     costs = []  # keep track of cost
     accuracies = []
@@ -453,7 +453,9 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
             print("Cost after iteration %i: %f" % (i, cost))
         if print_cost and i % iter == 0:
             costs.append(cost)
+    toc = time.time()
 
+    print("Time taken: "+str(toc-tic))
     # plot the cost
     plt.plot(np.squeeze(costs))
     plt.ylabel('cost')
@@ -470,7 +472,6 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
 
 
 para = L_layer_model(X, Y, layers_dims, num_iterations = 1000, print_cost = True, learning_rate=0.5)
-
 
 
 print(measure_accuracy(X_T,Y_T,para))
