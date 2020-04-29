@@ -17,6 +17,7 @@ for y in range(len(Y_train)):
 
 ann = NN.NeuralNetwork(inp = 784, hidden = [16,16], output = 10)
 epochs = 2000
+learning_rate = 0.5
 
 X_T = X_test.reshape(X_test.shape[0], -1).T/255
 Y_T = np.zeros((10, Y_test.size))
@@ -28,7 +29,7 @@ for y in range(len(Y_test)):
 
 tic = time.time()
 
-costs, accuracies = ann.train(X, Y,epochs=epochs,learning_rate=0.5, measure_accuracy=True, X_test=X_T, Y_test=Y_T)
+costs, accuracies = ann.train(X, Y,epochs=epochs,learning_rate=learning_rate, measure_accuracy=True, X_test=X_T, Y_test=Y_T)
 
 toc = time.time()
 
@@ -39,6 +40,7 @@ print("Time taken: "+str(toc-tic)+ " s")
 plt.plot(range(1,epochs+1),costs)
 plt.xlabel("Epochs")
 plt.ylabel("Cost")
+plt.title("Learning rate: "+str(learning_rate))
 plt.show()
 
 plt.plot(range(1,epochs+1), accuracies)
