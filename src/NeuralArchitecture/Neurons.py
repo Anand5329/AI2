@@ -13,7 +13,7 @@ class Neuron:
     def randomize_weights(self):
         if self.previous_layer_size > 0:
             for i in range(self.previous_layer_size):
-                self.weights.append(random.uniform(-1,1)*0.01)
+                self.weights.append(random.uniform(-1,1))
             return True
         else:
             return False
