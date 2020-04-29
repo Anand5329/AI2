@@ -248,6 +248,35 @@ def relu_backward(dA, cache):
     g_prime = (cache["Z"] > 0)
     return np.multiply(dA,g_prime)
 
+
+def predict(X, parameters):
+    A, cache = L_model_forward(X, parameters)
+    prediction = np.zeros((layers_dims[-1], X.shape[1]))
+    for i in range(X.shape[1]):
+        y = A[:, i]
+        max = np.max(y)
+        for j in range(y.size):
+            if y[j] == max:
+                prediction[j][i] = 1
+            else:
+                prediction[j][i] = 0
+    return prediction
+
+
+def measure_accuracy(X_test, Y_test, parameters):
+    Y_predict = predict(X_test, parameters)
+
+    ctr = 0
+    for i in range(Y_test.shape[1]):
+        check = Y_test[:, i] == Y_predict[:, i]
+        # print(check.all)
+        if check.all():
+            ctr += 1
+        else:
+            pass
+    # print("Accuracy: " + str(ctr / Y_T.shape[1]))
+    return ctr / Y_test.shape[1]
+
 # GRADED FUNCTION: linear_activation_backward
 
 def linear_activation_backward(dA, cache, activation):
@@ -416,7 +445,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
         parameters = update_parameters(parameters, grads, learning_rate)
         ### END CODE HERE ###
 
-        accuracies.append(measure_accuracy(X_test, Y_test, parameters))
+        accuracies.append(measure_accuracy(X_T, Y_T, parameters))
 
         # Print the cost every iter training example
         iter = 1
@@ -443,33 +472,5 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
 para = L_layer_model(X, Y, layers_dims, num_iterations = 1000, print_cost = True, learning_rate=0.5)
 
 
-def predict(X, parameters):
-    A, cache = L_model_forward(X, parameters)
-    prediction = np.zeros((layers_dims[-1], X.shape[1]))
-    for i in range(X.shape[1]):
-        y = A[:, i]
-        max = np.max(y)
-        for j in range(y.size):
-            if y[j] == max:
-                prediction[j][i] = 1
-            else:
-                prediction[j][i] = 0
-    return prediction
 
-
-def measure_accuracy(X_test, Y_test, parameters):
-    Y_predict = predict(X_test, parameters)
-
-    ctr = 0
-    for i in range(Y_test.shape[1]):
-        check = Y_test[:, i] == Y_predict[:, i]
-        # print(check.all)
-        if check.all():
-            ctr += 1
-        else:
-            pass
-    # print("Accuracy: " + str(ctr / Y_T.shape[1]))
-    return ctr / Y_test.shape[1]
-
-
-print(measure_accuracy(X_test,Y_test,para))
+print(measure_accuracy(X_T,Y_T,para))
