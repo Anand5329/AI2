@@ -17,7 +17,7 @@ for y in range(len(Y_train)):
 
 ann = NN.NeuralNetwork(inp = 784, hidden = [16,16], output = 10)
 epochs = 2000
-learning_rate = 0.5
+learning_rate = 0.42
 
 X_T = X_test.reshape(X_test.shape[0], -1).T/255
 Y_T = np.zeros((10, Y_test.size))
@@ -26,6 +26,19 @@ for y in range(len(Y_test)):
     Y_T[Y_test[y]][y] = 1
 
 # print(ann.measure_accuracy(X_T,Y_T))
+def compare():
+    print("Comparing:")
+    Y_P = ann.predict(X_T)
+    Y_predict = []
+    for i in range(Y_P.shape[1]):
+        x = Y_P[:, i]
+        for i in range(x.size):
+            if x[i] == 1:
+                Y_predict.append(i)
+
+    for x, y in zip(Y_test, Y_predict):
+        print(str(x) + ", " + str(y))
+    return
 
 tic = time.time()
 
@@ -43,9 +56,15 @@ plt.ylabel("Cost")
 plt.title("Learning rate: "+str(learning_rate))
 plt.show()
 
-plt.plot(range(1,epochs+1), accuracies)
+# plt.plot(range(1,epochs+1), accuracies["train"], 'b', label='Train')
+plt.plot(range(1,epochs+1), accuracies["test"], 'r', label='Test')
+plt.legend()
 plt.xlabel("Epochs")
 plt.ylabel("Accuracy")
 plt.show()
 
+compare()
+
 print(ann.measure_accuracy(X_T,Y_T))
+ann.save_model('o_point_4',2000, 0.4)
+
