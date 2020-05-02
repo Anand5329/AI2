@@ -116,7 +116,7 @@ class NeuralNetwork:
         return sum / existing_output_layer.size
 
     @staticmethod
-    def cross_entropy_cost(AL, Y):
+    def cross_entropy_cost(AL, Y): #TODO: change cost
         return (np.sum((- np.dot(Y,np.log(AL).T) - np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]))
 
     def calculate_errors(self, needed_output):
@@ -256,7 +256,7 @@ class NeuralNetwork:
 
     def train(self, X, Y, epochs = 2000, learning_rate = 1.2, measure_accuracy = False, X_test = [], Y_test = []):
         costs = []
-        accuracies = []
+        accuracies = {"train" : [], "test" : []}
         for i in range(epochs):
             X,Y = sku.shuffle(X.T,Y.T)
             X = X.T
@@ -267,7 +267,8 @@ class NeuralNetwork:
             costs.append(cost)
             self.backward_prop_vec(Y, learning_rate)
             if(measure_accuracy):
-                accuracies.append(self.measure_accuracy(X_test,Y_test))
+                accuracies["test"].append(self.measure_accuracy(X_test,Y_test))
+                # accuracies["train"].append(self.measure_accuracy(X, Y))
         return costs,accuracies
 
     def stochastic_GD(self, batch_size):
@@ -288,3 +289,40 @@ class NeuralNetwork:
             for id, b in np.ndenumerate(b_gradient):
                 b_gradient[id] = b/batch_size
             self.gradient_descent(w_gradient, b_gradient)
+
+    def save_model(self, name, epochs, learning_rate):
+        file = open(name + ".txt", 'wt')
+        try:
+            file.write("Model name: " + name + "\n")
+            file.write("Epochs: " + str(epochs) + "\n")
+            file.write("Learning Rate: " + str(learning_rate) + "\n")
+            file.write("Input Layer Size: " + str(self.input) + "\n")
+            file.write("Hidden Layers': " + str(self.hidden) + "\n")
+            file.write("Output Layer Size: " + str(self.output) + "\n")
+            file.write("Weights and Biases:" + "\n")
+            for id, x in np.ndenumerate(self.hidden_layers):
+                file.write("Size: " + str(self.hidden_layers[id[0]].size) + "\n")
+                file.writelines(str(x.weights) + "\n")
+                file.writelines(str(x.biases) + "\n")
+            file.write("Size: " + str(self.output) + "\n")
+            file.writelines(str(self.output_layer.weights) + "\n")
+            file.writelines(str(self.output_layer.biases) + "\n")
+        finally:
+            file.close()
+        return
+
+    def load_model(self, name):
+        file = open(name+".txt", 'rt')
+        file.readline()
+        print(file.readline())
+        print(file.readline())
+        self.input = int(file.readline().split()[-1])
+        self.hidden = list(file.readline().split()[-1])
+        self.output = int(file.readline().split()[-1])
+        file.readline()
+        for i in self.hidden:
+            pass #TODO: complete load_model
+
+
+    #TODO: implement ReLU
+    #TODO: try to make it faster
