@@ -415,7 +415,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     tic = time.time()
     # np.random.seed(1)
     costs = []  # keep track of cost
-    accuracies = []
+    accuracies = {"Train" : [], "Test" : []}
 
     # Parameters initialization. (≈ 1 line of code)
     ### START CODE HERE ###
@@ -445,7 +445,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
         parameters = update_parameters(parameters, grads, learning_rate)
         ### END CODE HERE ###
 
-        accuracies.append(measure_accuracy(X_T, Y_T, parameters))
+        accuracies["Test"].append(measure_accuracy(X_T, Y_T, parameters))
+        accuracies["Train"].append(measure_accuracy(X,Y,parameters))
 
         # Print the cost every iter training example
         iter = 1
@@ -463,15 +464,18 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     plt.title("Learning rate =" + str(learning_rate))
     plt.show()
 
-    plt.plot(accuracies)
+    plt.plot(accuracies["Test"], 'b', label="Test")
+    plt.plot(accuracies["Train"], 'r', label="Train")
+    plt.legend()
     plt.ylabel("accuracy")
     plt.xlabel("iterations")
     plt.title("Learning rate: "+str(learning_rate))
+    plt.show()
 
     return parameters
 
 
-para = L_layer_model(X, Y, layers_dims, num_iterations = 1000, print_cost = True, learning_rate=0.5)
+para = L_layer_model(X, Y, layers_dims, num_iterations = 2000, print_cost = True, learning_rate=0.3)
 
 
 print(measure_accuracy(X_T,Y_T,para))
