@@ -44,7 +44,7 @@ class NeuralNetwork:
         self.output_layer.update_values()
         return
 
-    def forward_prop_vec(self, inputs):
+    def forward_prop_vec(self, inputs, activation='sigmoid'):
         self.update_input(inputs)
         A = inputs
         Z_cache = []
@@ -52,7 +52,10 @@ class NeuralNetwork:
             W = self.hidden_layers[i-1].weights
             b = self.hidden_layers[i-1].biases
             self.hidden_layers[i-1].z = np.dot(W,A) + b
-            A = NeuralNetwork.sigmoid(self.hidden_layers[i-1].z)
+            if activation == 'sigmoid':
+                A = NeuralNetwork.sigmoid(self.hidden_layers[i-1].z)
+            elif activation == 'relu':
+                A = NeuralNetwork.relu(self.hidden_layers[i-1].z)
             self.hidden_layers[i-1].values = A
         self.output_layer.z = np.dot(self.output_layer.weights,A) + self.output_layer.biases
         self.output_layer.values = NeuralNetwork.sigmoid(self.output_layer.z)
@@ -69,6 +72,14 @@ class NeuralNetwork:
     def sigmoid(x):
         x = x.astype('float64')
         return 1 / (1 + np.exp(-x))
+
+    @staticmethod
+    def relu(x):
+        return np.maximum(x,0)
+
+    @staticmethod
+    def relu_derivative(x):
+        return np.divide(np.maximum(x,0),x)
 
     @staticmethod
     def feed_forward(previous_layer, current_layer):
@@ -116,7 +127,7 @@ class NeuralNetwork:
         return sum / existing_output_layer.size
 
     @staticmethod
-    def cross_entropy_cost(AL, Y): #TODO: change cost
+    def cross_entropy_cost(AL, Y):
         return (np.sum((- np.dot(Y,np.log(AL).T) - np.dot(1-Y,np.log(1-AL).T))/Y.shape[1]))
 
     def calculate_errors(self, needed_output):
@@ -171,19 +182,23 @@ class NeuralNetwork:
     def sigmoid_derivative(self, layer):
         return np.multiply(1-layer.values, layer.values)
 
-    def back_step(self, dA, layer, prev_layer, m):
-        dZ = np.multiply(dA, self.sigmoid_derivative(layer))
+    def back_step(self, dA, layer, prev_layer, m, activation='sigmoid'):
+        if activation == 'sigmoid':
+            g_prime = self.sigmoid_derivative(layer)
+        elif activation == 'relu':
+            g_prime = NeuralNetwork.relu_derivative(layer.z)
+        dZ = np.multiply(dA, g_prime)
         layer.grad["W"] = np.dot(dZ, prev_layer.values.T) / m
         layer.grad["b"] = np.sum(dZ, axis=1, keepdims=True) / m
         return np.dot(layer.weights.T, dZ)
 
-    def backward_prop_vec(self, Y, learning_rate):
+    def backward_prop_vec(self, Y, learning_rate, activation='sigmoid'):
         m = Y.shape[1]
         dAL = -np.divide(Y, self.output_layer.values) + np.divide(1 - Y, 1 - self.output_layer.values)
         dA = self.back_step(dAL, self.output_layer, self.hidden_layers[self.L - 2-1], m)
         for l in reversed(range(1, self.L - 2)):
-            dA = self.back_step(dA, self.hidden_layers[l], self.hidden_layers[l - 1], m)
-        dA = self.back_step(dA, self.hidden_layers[0], self.input_layer, m)
+            dA = self.back_step(dA, self.hidden_layers[l], self.hidden_layers[l - 1], m, activation)
+        dA = self.back_step(dA, self.hidden_layers[0], self.input_layer, m, activation)
         self.update(learning_rate)
         return
 
@@ -254,18 +269,18 @@ class NeuralNetwork:
         self.output_layer.update_biases()
         return
 
-    def train(self, X, Y, epochs = 2000, learning_rate = 1.2, measure_accuracy = False, X_test = [], Y_test = []):
+    def train(self, X, Y, epochs = 2000, learning_rate = 1.2, measure_accuracy = False, X_test = [], Y_test = [], activation='sigmoid'):
         costs = []
         accuracies = {"train" : [], "test" : []}
         for i in range(epochs):
             X,Y = sku.shuffle(X.T,Y.T)
             X = X.T
             Y = Y.T
-            self.forward_prop_vec(X)
+            self.forward_prop_vec(X,activation=activation)
             cost = NeuralNetwork.cross_entropy_cost(self.output_layer.values, Y)
             print("Cost after epoch {0}: {1}".format(i+1,cost))
             costs.append(cost)
-            self.backward_prop_vec(Y, learning_rate)
+            self.backward_prop_vec(Y, learning_rate, activation=activation)
             if(measure_accuracy):
                 accuracies["test"].append(self.measure_accuracy(X_test,Y_test))
                 # accuracies["train"].append(self.measure_accuracy(X, Y))
@@ -324,5 +339,4 @@ class NeuralNetwork:
             pass #TODO: complete load_model
 
 
-    #TODO: implement ReLU
     #TODO: try to make it faster
