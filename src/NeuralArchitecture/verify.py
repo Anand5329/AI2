@@ -41,7 +41,7 @@ def initialize_parameters_deep(layer_dims):
                     bl -- bias vector of shape (layer_dims[l], 1)
     """
 
-    np.random.seed(3)
+    np.random.seed(1)
     parameters = {}
     L = len(layer_dims)  # number of layers in the network
 
@@ -83,14 +83,44 @@ def linear_forward(A, W, b):
     return Z, cache
 
 
-def sigmoid(x):
-    cache = {"Z": x}
-    return 1/(1+np.exp(-x)), cache
+def sigmoid(Z):
+    """
+    Implements the sigmoid activation in numpy
+
+    Arguments:
+    Z -- numpy array of any shape
+
+    Returns:
+    A -- output of sigmoid(z), same shape as Z
+    cache -- returns Z as well, useful during backpropagation
+    """
+
+    A = 1 / (1 + np.exp(-Z))
+    cache = Z
+
+    return A, cache
 
 
-def relu(x):
-    cache = {"Z": x}
-    return np.maximum(x,0), cache
+def relu(Z):
+    """
+    Implement the RELU function.
+
+    Arguments:
+    Z -- Output of the linear layer, of any shape
+
+    Returns:
+    A -- Post-activation parameter, of the same shape as Z
+    cache -- a python dictionary containing "A" ; stored for computing the backward pass efficiently
+    """
+
+    A = np.maximum(0, Z)
+
+    assert (A.shape == Z.shape)
+
+    cache = Z
+    return A, cache
+
+
 # GRADED FUNCTION: linear_activation_forward
 
 def linear_activation_forward(A_prev, W, b, activation):
@@ -229,14 +259,49 @@ def linear_backward(dZ, cache):
     return dA_prev, dW, db
 
 
-def sigmoid_backward(dA, cache):
-    g, cache = sigmoid(cache["Z"])
-    g_prime = np.multiply((1-g), g)
-    return np.multiply(dA,g_prime)
-
 def relu_backward(dA, cache):
-    g_prime = (cache["Z"] > 0)
-    return np.multiply(dA,g_prime)
+    """
+    Implement the backward propagation for a single RELU unit.
+
+    Arguments:
+    dA -- post-activation gradient, of any shape
+    cache -- 'Z' where we store for computing backward propagation efficiently
+
+    Returns:
+    dZ -- Gradient of the cost with respect to Z
+    """
+
+    Z = cache
+    dZ = np.array(dA, copy=True)  # just converting dz to a correct object.
+
+    # When z <= 0, you should set dz to 0 as well.
+    dZ[Z <= 0] = 0
+
+    assert (dZ.shape == Z.shape)
+
+    return dZ
+
+
+def sigmoid_backward(dA, cache):
+    """
+    Implement the backward propagation for a single SIGMOID unit.
+
+    Arguments:
+    dA -- post-activation gradient, of any shape
+    cache -- 'Z' where we store for computing backward propagation efficiently
+
+    Returns:
+    dZ -- Gradient of the cost with respect to Z
+    """
+
+    Z = cache
+
+    s = 1 / (1 + np.exp(-Z))
+    dZ = dA * s * (1 - s)
+
+    assert (dZ.shape == Z.shape)
+
+    return dZ
 
 
 def predict(X, parameters):
