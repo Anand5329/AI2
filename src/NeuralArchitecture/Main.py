@@ -6,6 +6,7 @@ import random
 from tensorflow.keras.datasets import mnist
 import matplotlib.pyplot as plt
 import time
+import h5py
 
 (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 X = X_train.reshape(X_train.shape[0],-1).T/255
@@ -17,7 +18,7 @@ for y in range(len(Y_train)):
 
 ann = NN.NeuralNetwork(inp = 784, hidden = [16,16], output = 10)
 epochs = 2000
-learning_rate = 0.3
+learning_rate = 0.075
 activation = 'relu'
 
 X_T = X_test.reshape(X_test.shape[0], -1).T/255

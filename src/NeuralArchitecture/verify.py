@@ -8,7 +8,7 @@ import scipy
 from PIL import Image
 from scipy import ndimage
 #from dnn_app_utils_v3 import *
-from tensorflow.keras.datasets import mnist
+# from tensorflow.keras.datasets import mnist
 
 #%matplotlib inline
 plt.rcParams['figure.figsize'] = (5.0, 4.0) # set default size of plots
@@ -17,20 +17,10 @@ plt.rcParams['image.cmap'] = 'gray'
 
 #%load_ext autoreload
 #%autoreload 2
-
-(X_train, Y_train), (X_test, Y_test) = mnist.load_data()
-X = X_train.reshape(X_train.shape[0],-1).T/255
-Y = np.zeros((10,Y_train.size))
-
-for y in range(len(Y_train)):
-    Y[Y_train[y]][y]=1
-
-X_T = X_test.reshape(X_test.shape[0], -1).T/255
-Y_T = np.zeros((10, Y_test.size))
-
-for y in range(len(Y_test)):
-    Y_T[Y_test[y]][y] = 1
-
+Y_gl = None
+X_gl= None
+X_T = None
+Y_T = None
 ### CONSTANTS DEFINING THE MODEL ####
 n_x = 12288     # num_px * num_px * 3
 n_h = 7
@@ -51,7 +41,7 @@ def initialize_parameters_deep(layer_dims):
                     bl -- bias vector of shape (layer_dims[l], 1)
     """
 
-    # np.random.seed(3)
+    np.random.seed(3)
     parameters = {}
     L = len(layer_dims)  # number of layers in the network
 
@@ -156,7 +146,7 @@ def L_model_forward(X, parameters):
     """
 
     caches = []
-    A = X
+    A = X_gl
     L = len(parameters) // 2  # number of layers in the neural network
 
     # Implement [LINEAR -> RELU]*(L-1). Add "cache" to the "caches" list.
@@ -173,7 +163,7 @@ def L_model_forward(X, parameters):
     caches.append(cache)
     ### END CODE HERE ###
 
-    assert (AL.shape == (10, X.shape[1]))
+    assert (AL.shape == (Y_gl.shape[0], X_gl.shape[1]))
 
     return AL, caches
 
@@ -397,7 +387,7 @@ layers_dims = [784, 16, 16, 10] #  4-layer model
 
 # GRADED FUNCTION: L_layer_model
 
-def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, print_cost=False):  # lr was 0.009
+def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, print_cost=False, X_test=X_T, Y_test=Y_T):  # lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
 
@@ -412,8 +402,17 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     Returns:
     parameters -- parameters learnt by the model. They can then be used to predict.
     """
+
+    global Y_gl
+    global X_gl
+    global X_T
+    global Y_T
+    X_T = X_test
+    Y_T = Y_test
+    Y_gl = Y
+    X_gl = X
     tic = time.time()
-    # np.random.seed(1)
+    np.random.seed(1)
     costs = []  # keep track of cost
     accuracies = {"Train" : [], "Test" : []}
 
@@ -475,7 +474,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     return parameters
 
 
-para = L_layer_model(X, Y, layers_dims, num_iterations = 2000, print_cost = True, learning_rate=0.3)
+# para = L_layer_model(X, Y, layers_dims, num_iterations = 2000, print_cost = True, learning_rate=0.3)
 
 
-print(measure_accuracy(X_T,Y_T,para))
+#print(measure_accuracy(X_T,Y_T,para))
