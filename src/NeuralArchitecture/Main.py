@@ -17,7 +17,8 @@ for y in range(len(Y_train)):
 
 ann = NN.NeuralNetwork(inp = 784, hidden = [16,16], output = 10)
 epochs = 2000
-learning_rate = 0.42
+learning_rate = 0.3
+activation = 'relu'
 
 X_T = X_test.reshape(X_test.shape[0], -1).T/255
 Y_T = np.zeros((10, Y_test.size))
@@ -37,17 +38,18 @@ def compare():
                 Y_predict.append(i)
 
     for x, y in zip(Y_test, Y_predict):
-        print(str(x) + ", " + str(y))
+        if x!=y:
+            print(str(x) + ", " + str(y))
     return
 
 tic = time.time()
 
-costs, accuracies = ann.train(X, Y,epochs=epochs,learning_rate=learning_rate, measure_accuracy=True, X_test=X_T, Y_test=Y_T)
+costs, accuracies = ann.train(X, Y,epochs=epochs,learning_rate=learning_rate, measure_accuracy=True, X_test=X_T, Y_test=Y_T, activation=activation)
 
 toc = time.time()
 
 print("Time taken: "+str(toc-tic)+ " s")
-
+print("Time per epoch: "+str((toc-tic)/epochs))
 
 
 plt.plot(range(1,epochs+1),costs)
@@ -67,4 +69,4 @@ compare()
 
 print(ann.measure_accuracy(X_T,Y_T))
 ann.save_model('o_point_4',2000, 0.4)
-
+#TODO: use very simple architecture
