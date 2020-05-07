@@ -41,13 +41,13 @@ def initialize_parameters_deep(layer_dims):
                     bl -- bias vector of shape (layer_dims[l], 1)
     """
 
-    np.random.seed(1)
+    np.random.seed(2)
     parameters = {}
     L = len(layer_dims)  # number of layers in the network
 
     for l in range(1, L):
         ### START CODE HERE ### (≈ 2 lines of code)
-        parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l - 1]) * 0.01
+        parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l - 1]) /np.sqrt(layers_dims[l-1]) #* 0.01
         parameters['b' + str(l)] = np.zeros((layer_dims[l], 1))
         ### END CODE HERE ###
 
@@ -176,7 +176,7 @@ def L_model_forward(X, parameters):
     """
 
     caches = []
-    A = X_gl
+    A = X
     L = len(parameters) // 2  # number of layers in the neural network
 
     # Implement [LINEAR -> RELU]*(L-1). Add "cache" to the "caches" list.
@@ -193,7 +193,7 @@ def L_model_forward(X, parameters):
     caches.append(cache)
     ### END CODE HERE ###
 
-    assert (AL.shape == (Y_gl.shape[0], X_gl.shape[1]))
+    assert (AL.shape == (Y_gl.shape[0], X.shape[1]))
 
     return AL, caches
 
@@ -219,7 +219,7 @@ def compute_cost(AL, Y):
 
     # Compute loss from aL and y.
     ### START CODE HERE ### (≈ 1 lines of code)
-    cost = -np.sum(np.dot(Y, np.log(AL).T) + np.dot(1 - Y, np.log(1 - AL).T)) / m
+    cost = -np.sum(np.dot(Y, np.log(AL).T) + np.dot(1 - Y, np.log(1 - AL).T)) *(1./m)
     ### END CODE HERE ###
 
     cost = np.squeeze(cost)  # To make sure your cost's shape is what we expect (e.g. this turns [[17]] into 17).
@@ -247,8 +247,8 @@ def linear_backward(dZ, cache):
     m = A_prev.shape[1]
 
     ### START CODE HERE ### (≈ 3 lines of code)
-    dW = np.dot(dZ, A_prev.T) / m
-    db = np.sum(dZ, axis=1, keepdims=True) / m
+    dW = np.dot(dZ, A_prev.T) *(1./m)
+    db = np.sum(dZ, axis=1, keepdims=True) *(1./m)
     dA_prev = np.dot(cache[1].T, dZ)
     ### END CODE HERE ###
 
@@ -304,7 +304,7 @@ def sigmoid_backward(dA, cache):
     return dZ
 
 
-def predict(X, parameters):
+def multi_predict(X, parameters):
     A, cache = L_model_forward(X, parameters)
     prediction = np.zeros((layers_dims[-1], X.shape[1]))
     for i in range(X.shape[1]):
@@ -318,8 +318,41 @@ def predict(X, parameters):
     return prediction
 
 
+def predict(X, y, parameters):
+    """
+    This function is used to predict the results of a  L-layer neural network.
+
+    Arguments:
+    X -- data set of examples you would like to label
+    parameters -- parameters of the trained model
+
+    Returns:
+    p -- predictions for the given dataset X
+    """
+
+    m = X.shape[1]
+    n = len(parameters) // 2  # number of layers in the neural network
+    p = np.zeros((1, m))
+
+    # Forward propagation
+    probas, caches = L_model_forward(X, parameters)
+
+    # convert probas to 0/1 predictions
+    for i in range(0, probas.shape[1]):
+        if probas[0, i] > 0.5:
+            p[0, i] = 1
+        else:
+            p[0, i] = 0
+
+    # print results
+    # print ("predictions: " + str(p))
+    # print ("true labels: " + str(y))
+    print("Accuracy: " + str(np.sum((p == y) / m)))
+
+    return p
+
 def measure_accuracy(X_test, Y_test, parameters):
-    Y_predict = predict(X_test, parameters)
+    Y_predict = predict(X_test, Y_test, parameters)
 
     ctr = 0
     for i in range(Y_test.shape[1]):
@@ -452,7 +485,7 @@ layers_dims = [784, 16, 16, 10] #  4-layer model
 
 # GRADED FUNCTION: L_layer_model
 
-def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, print_cost=False, X_test=X_T, Y_test=Y_T):  # lr was 0.009
+def L_layer_model(X, Y, layers_dim, learning_rate=0.0075, num_iterations=3000, print_cost=False, X_test=X_T, Y_test=Y_T):  # lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
 
@@ -467,7 +500,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     Returns:
     parameters -- parameters learnt by the model. They can then be used to predict.
     """
-
+    global layers_dims
+    layers_dims = layers_dim
     global Y_gl
     global X_gl
     global X_T
@@ -483,7 +517,7 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
 
     # Parameters initialization. (≈ 1 line of code)
     ### START CODE HERE ###
-    parameters = initialize_parameters_deep(layers_dims)
+    parameters = initialize_parameters_deep(layers_dim)
     ### END CODE HERE ###
 
     # Loop (gradient descent)
@@ -537,6 +571,8 @@ def L_layer_model(X, Y, layers_dims, learning_rate=0.0075, num_iterations=3000, 
     plt.show()
 
     return parameters
+
+#TODO: debug!!
 
 
 # para = L_layer_model(X, Y, layers_dims, num_iterations = 2000, print_cost = True, learning_rate=0.3)

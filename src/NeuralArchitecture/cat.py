@@ -14,14 +14,14 @@ Y_train = file['train_set_y']
 X_test = test['test_set_x']
 Y_test = test['test_set_y']
 X_test = np.array(X_test)
-X_test = X_test.reshape(X_test.shape[0],-1).T
+X_test = X_test.reshape(X_test.shape[0],-1).T/255
 Y_test = np.array(Y_test)
 Y_test = Y_test.reshape(Y_test.size,1).T
 
 
 X_t = np.array(X_train)
 
-X = X_t.reshape(X_t.shape[0],-1)
+X = X_t.reshape(X_t.shape[0],-1)/255
 
 
 Y = np.array(Y_train)
@@ -29,7 +29,7 @@ Y = Y.reshape(Y.size,1)
 
 X = X.T
 Y = Y.T
-epochs = 30
+epochs = 2500
 learning_rate = 0.0075
 layer_dims = [X.shape[0], 20,7,5,1]
 
@@ -51,6 +51,6 @@ def my_model():
     plt.title("Learning rate: " + str(learning_rate))
     plt.show()
 
-
+print(np.sum(89))
 para = V.L_layer_model(X,Y,layer_dims,learning_rate,epochs,True,X_test,Y_test)
 print(V.measure_accuracy(X_test,Y_test,para))
