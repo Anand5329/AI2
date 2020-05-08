@@ -1,6 +1,7 @@
 import src.NeuralArchitecture.NeuralNetworks as NN
 import src.NeuralArchitecture.Neurons as N
 import src.NeuralArchitecture.Layer as L
+import src.NeuralArchitecture.verify as V
 import numpy as np
 import random
 from tensorflow.keras.datasets import mnist
@@ -43,31 +44,42 @@ def compare():
             print(str(x) + ", " + str(y))
     return
 
-tic = time.time()
 
-costs, accuracies = ann.train(X, Y,epochs=epochs,learning_rate=learning_rate, measure_accuracy=True, X_test=X_T, Y_test=Y_T, activation=activation)
+def my_model():
+    tic = time.time()
+    costs, accuracies = ann.train(X, Y, epochs=epochs, learning_rate=learning_rate, measure_accuracy=True, X_test=X_T,
+                                  Y_test=Y_T, activation=activation)
+    toc = time.time()
+    print("Time taken: " + str(toc - tic) + " s")
+    print("Time per epoch: " + str((toc - tic) / epochs))
 
-toc = time.time()
+    plt.plot(range(1, epochs + 1), costs)
+    plt.xlabel("Epochs")
+    plt.ylabel("Cost")
+    plt.title("Learning rate: " + str(learning_rate))
+    plt.show()
 
-print("Time taken: "+str(toc-tic)+ " s")
-print("Time per epoch: "+str((toc-tic)/epochs))
+    # plt.plot(range(1,epochs+1), accuracies["train"], 'b', label='Train')
+    plt.plot(range(1, epochs + 1), accuracies["test"], 'r', label='Test')
+    plt.legend()
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    plt.show()
+
+    compare()
+
+    print(ann.measure_accuracy(X_T, Y_T))
+    ann.save_model('o_point_4', 2000, 0.4)
+    return tic, toc
 
 
-plt.plot(range(1,epochs+1),costs)
-plt.xlabel("Epochs")
-plt.ylabel("Cost")
-plt.title("Learning rate: "+str(learning_rate))
-plt.show()
+def verify(layers_dim):
+    return V.L_layer_model(X, Y, layers_dim, learning_rate, epochs, True, X_T, Y_T, print_acc=True)
 
-# plt.plot(range(1,epochs+1), accuracies["train"], 'b', label='Train')
-plt.plot(range(1,epochs+1), accuracies["test"], 'r', label='Test')
-plt.legend()
-plt.xlabel("Epochs")
-plt.ylabel("Accuracy")
-plt.show()
 
-compare()
+para = verify([784,16,16,10])
 
-print(ann.measure_accuracy(X_T,Y_T))
-ann.save_model('o_point_4',2000, 0.4)
+
 #TODO: use very simple architecture
+
+
