@@ -1,4 +1,5 @@
 import random
+import numpy as np
 class Neuron:
 
     def __init__(self, bias=0, value=0, previous_layer_size = 0):
@@ -13,7 +14,7 @@ class Neuron:
     def randomize_weights(self):
         if self.previous_layer_size > 0:
             for i in range(self.previous_layer_size):
-                self.weights.append(random.uniform(-1,1)*0.01)
+                self.weights.append(np.random.randn()/np.sqrt(self.previous_layer_size))
             return True
         else:
             return False

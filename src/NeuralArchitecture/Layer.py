@@ -6,6 +6,7 @@ class Layer:
 
     def __init__(self, previous_layer_size = 1, size = 1, values = []):
         self.size = size
+        self.previous_layer_size = previous_layer_size
         self.biases = []
         self.values = []
         self.neurons = []
@@ -16,20 +17,11 @@ class Layer:
         if len(values) != size and len(values) != 0:
             print("Input size mismatch")
         for i in range(self.size):
-            self.neurons.append(Neurons.Neuron(previous_layer_size = previous_layer_size))
-            self.neurons[i].randomize_weights()
-            self.neurons[i].randomize_bias()
+            self.neurons.append(Neurons.Neuron(previous_layer_size = self.previous_layer_size))
             if len(values) == size:
                 self.neurons[i].value = values[i]
-            self.biases.append(self.neurons[i].bias)
-            self.values.append(self.neurons[i].value)
-            self.weights.append(self.neurons[i].weights)
-        self.biases = np.array(self.biases)
-        self.values = np.array(self.values)
-        self.weights = np.array(self.weights)
-
-        self.biases = self.biases.reshape(self.biases.shape[0],1)
-        self.values = self.values.reshape(self.values.shape[0],1)
+        if self.previous_layer_size != 0:
+            self.initialize_parameters()
 
 
     def iter_gen(self):
@@ -50,3 +42,9 @@ class Layer:
         for b, n in zip(self.biases, self.neurons):
             n.bias = b
         return
+
+    def initialize_parameters(self):
+        self.weights = np.random.randn(self.size, self.previous_layer_size)/np.sqrt(self.previous_layer_size)
+        self.biases = np.zeros((self.size,1))
+        self.update_weights()
+        self.update_biases()
