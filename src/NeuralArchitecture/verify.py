@@ -352,7 +352,10 @@ def predict(X, y, parameters):
     return p
 
 def measure_accuracy(X_test, Y_test, parameters):
-    Y_predict = predict(X_test, Y_test, parameters)
+    if Y_test.shape[0] == 1:
+        Y_predict = predict(X_test, Y_test, parameters)
+    else:
+        Y_predict = multi_predict(X_test, parameters)
 
     ctr = 0
     for i in range(Y_test.shape[1]):
@@ -485,7 +488,7 @@ layers_dims = [784, 16, 16, 10] #  4-layer model
 
 # GRADED FUNCTION: L_layer_model
 
-def L_layer_model(X, Y, layers_dim, learning_rate=0.0075, num_iterations=3000, print_cost=False, X_test=X_T, Y_test=Y_T):  # lr was 0.009
+def L_layer_model(X, Y, layers_dim, learning_rate=0.0075, num_iterations=3000, print_cost=False, X_test=X_T, Y_test=Y_T, print_acc = False):  # lr was 0.009
     """
     Implements a L-layer neural network: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
 
@@ -543,8 +546,9 @@ def L_layer_model(X, Y, layers_dim, learning_rate=0.0075, num_iterations=3000, p
         parameters = update_parameters(parameters, grads, learning_rate)
         ### END CODE HERE ###
 
-        accuracies["Test"].append(measure_accuracy(X_T, Y_T, parameters))
-        accuracies["Train"].append(measure_accuracy(X,Y,parameters))
+        if print_acc:
+            accuracies["Test"].append(measure_accuracy(X_T, Y_T, parameters))
+            accuracies["Train"].append(measure_accuracy(X,Y,parameters))
 
         # Print the cost every iter training example
         iter = 1
@@ -561,14 +565,14 @@ def L_layer_model(X, Y, layers_dim, learning_rate=0.0075, num_iterations=3000, p
     plt.xlabel('iterations')
     plt.title("Learning rate =" + str(learning_rate))
     plt.show()
-
-    plt.plot(accuracies["Test"], 'b', label="Test")
-    plt.plot(accuracies["Train"], 'r', label="Train")
-    plt.legend()
-    plt.ylabel("accuracy")
-    plt.xlabel("iterations")
-    plt.title("Learning rate: "+str(learning_rate))
-    plt.show()
+    if print_acc:
+        plt.plot(accuracies["Test"], 'b', label="Test")
+        plt.plot(accuracies["Train"], 'r', label="Train")
+        plt.legend()
+        plt.ylabel("accuracy")
+        plt.xlabel("iterations")
+        plt.title("Learning rate: " + str(learning_rate))
+        plt.show()
 
     return parameters
 
