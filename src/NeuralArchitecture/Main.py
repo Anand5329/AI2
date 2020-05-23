@@ -18,8 +18,8 @@ for y in range(len(Y_train)):
     Y[Y_train[y]][y]=1
 
 ann = NN.NeuralNetwork(inp = 784, hidden = [16,16], output = 10)
-epochs = 2000
-learning_rate = 0.075
+epochs = 500
+learning_rate = 0.05
 activation = 'relu'
 
 X_T = X_test.reshape(X_test.shape[0], -1).T/255

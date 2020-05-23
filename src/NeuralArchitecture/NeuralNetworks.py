@@ -204,6 +204,19 @@ class NeuralNetwork:
         return
 
     @staticmethod
+    def forward_prop(inputs, weights,biases,activation='sigmoid'):
+        A = inputs
+        for i in range(weights.shape[0]):
+            W = weights[i]
+            b = biases[i]
+            Z = np.dot(W,A) + b
+            if i == weights.shape[0]-1 or activation is 'sigmoid':
+                A = NeuralNetwork.sigmoid(Z)
+            elif activation is 'relu':
+                A = NeuralNetwork.relu(Z)
+        return A
+
+    @staticmethod
     def sigmoid(x):
         x = x.astype('float64')
         return 1 / (1 + np.exp(-x))
@@ -265,12 +278,15 @@ class NeuralNetwork:
         prediction = np.zeros((self.output,X.shape[1]))
         for i in range(X.shape[1]):
             y = self.output_layer.values[:,i].reshape(self.output, 1)
-            max = np.max(y)
-            for j in range(y.size):
-                if y[j] == max:
-                    prediction[j][i] = 1
-                else:
-                    prediction[j][i] = 0
+            if y.size is 1:
+                prediction[0][i] = int(y>0.5)
+            else:
+                max = np.max(y)
+                for j in range(y.size):
+                    if y[j] == max:
+                        prediction[j][i] = 1
+                    else:
+                        prediction[j][i] = 0
         return prediction
 
     def measure_accuracy(self, X_test, Y_test):
@@ -344,3 +360,52 @@ class NeuralNetwork:
 
 
     #TODO: try to make it faster
+
+    def reshape_into_vector(self, mode='para'):
+        layers = self.hidden_layers
+        layers.append(self.output_layer)
+
+        theta = []
+        if mode is 'para':
+            for l in layers:
+                theta = theta + l.weights.reshape(l.weights.size,1)
+                theta = theta + l.biases.reshape(l.biases.size,1)
+        elif mode is 'grad':
+            for l in layers:
+                theta = theta + l.grad["W"].reshape(l.grad["W"].size,1)
+                theta = theta + l.grad["b"].reshape(l.grad["b"].size,1)
+        return theta
+
+    def get_layers(self):
+        layers = self.hidden_layers
+        layers.append(self.output_layer)
+        return layers
+
+    def get_weights(self,e=0):
+        weights = []
+        layers = self.get_layers()
+        for l in layers:
+            weights.append(l.weights+e)
+        return weights
+
+    def get_biases(self,e=0):
+        biases = []
+        layers = self.get_layers()
+        for l in layers:
+            biases.append(l.biases+e)
+        return biases
+
+    def gradient_check(self,X,Y,activation,epsilon=1e-7):
+        W = self.get_weights(e=epsilon)
+        b = self.get_biases(e=epsilon)
+        Al = NeuralNetwork.forward_prop(X,W,b,activation)
+        cost = self.cross_entropy_cost(Al,Y)
+
+        W = self.get_weights(e=-epsilon)
+        b = self.get_biases(e=-epsilon)
+        Al = NeuralNetwork.forward_prop(X,W,b,activation)
+        cost -= self.cross_entropy_cost(Al,Y)
+        dtheta = cost/(2*epsilon)
+
+
+        

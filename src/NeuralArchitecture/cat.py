@@ -51,6 +51,4 @@ def my_model():
     plt.title("Learning rate: " + str(learning_rate))
     plt.show()
 
-print(np.sum(89))
-para = V.L_layer_model(X,Y,layer_dims,learning_rate,epochs,True,X_test,Y_test,print_acc=True)
-print(V.measure_accuracy(X_test,Y_test,para))
+my_model()
